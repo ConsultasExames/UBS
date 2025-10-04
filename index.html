@@ -5,30 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Resultados de Exames</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Esconde a área admin por padrão */
+        #area-admin {
+            display: none;
+        }
+        /* Estilos para o link "Acesso Admin" */
+        #link-admin {
+            position: fixed; /* Fixa no canto */
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8em;
+            color: #aaa;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    
+    <div class="container" id="area-consulta-publica">
         <h1>Consulta de Resultados</h1>
         <p>Informe seu CPF para visualizar o resultado do exame.</p>
 
-        <form id="formConsulta">
-            <label for="cpfConsulta">CPF (somente números):</label>
-            <input type="text" id="cpfConsulta" placeholder="11122233344" maxlength="11" required>
+        <form id="formConsultaPublica">
+            <label for="cpfConsultaPublica">CPF (somente números - 11 dígitos):</label>
+            <input type="text" id="cpfConsultaPublica" placeholder="11122233344" maxlength="11" required>
 
             <button type="submit">Consultar Resultado</button>
         </form>
 
-        <div id="resultado">
+        <div id="resultadoPublico">
             </div>
     </div>
 
+    <div class="container" id="area-admin">
+        <h1>Área Administrativa</h1>
+        <h2>Cadastro/Atualização de Resultados</h2>
+
+        <form id="formAdmin">
+            <label for="cpfAdmin">CPF (somente números - 11 dígitos):</label>
+            <input type="text" id="cpfAdmin" placeholder="11122233344" maxlength="11" required>
+
+            <button type="button" id="btnConsultaAdmin">Consultar Resultado Atual</button>
+            
+            <div id="consultaRapidaResultado" style="margin-bottom: 15px;">
+                </div>
+
+            <label for="resultadoAdmin">Resultado:</label>
+            <textarea id="resultadoAdmin" rows="3" placeholder="Digite o resultado completo. Ex: NEGATIVO, POSITIVO." required></textarea>
+
+            <button type="submit">Salvar/Atualizar Resultado</button>
+        </form>
+
+        <div id="mensagemAdmin"></div>
+        
+        <p style="margin-top: 20px;"><button onclick="voltarParaConsulta()">Voltar para a Consulta Pública</button></p>
+    </div>
+
+    <a id="link-admin" onclick="exibirAreaAdmin()">Acesso Admin</a>
+
     <script src="script.js"></script>
-    <script>
-        // Adiciona o listener de envio do formulário, que chama a função de consulta em script.js
-        document.getElementById('formConsulta').addEventListener('submit', function(e) {
-            e.preventDefault();
-            consultarResultado();
-        });
-    </script>
 </body>
 </html>

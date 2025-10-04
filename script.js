@@ -1,5 +1,25 @@
-// ** COLE AQUI O URL DE API GERADO NO PASSO 2 **
-const API_URL = 'https://script.google.com/macros/library/d/1m619kX1N1dvRzUUZXqPgj3Bgzi5IKcZKI9BvnMdIb3YnjcWKjXC97K3R/1'; 
+// ** COLE AQUI O URL DE API GERADO NO PASSO 2 (Do nosso guia anterior) **
+const API_URL = 'https://script.google.com/macros/s/AKfycbz0zs8ajZ5H_f6H68XVcz-KzXzG8CFdXPbxxzWLbgT3qWFkgnHcq4xbW_LCG3WwB1h0/exec'; 
+// --- Senha simples para a Área Admin ---
+const SENHA_ADMIN = 'admin123'; // *** TROQUE ISSO POR UMA SENHA FORTE! ***
+
+// --- Funções de Controle de Acesso e Visualização ---
+
+function exibirAreaAdmin() {
+    const senhaDigitada = prompt("Por favor, digite a senha de administrador:");
+    if (senhaDigitada === SENHA_ADMIN) {
+        document.getElementById('area-consulta-publica').style.display = 'none';
+        document.getElementById('area-admin').style.display = 'block';
+        alert("Acesso concedido à Área Admin.");
+    } else if (senhaDigitada !== null) { // Evita a mensagem se o usuário cancelar
+        alert("Senha incorreta. Acesso negado.");
+    }
+}
+
+function voltarParaConsulta() {
+    document.getElementById('area-consulta-publica').style.display = 'block';
+    document.getElementById('area-admin').style.display = 'none';
+}
 
 // --- Lógica de Admin (Salvar/POST) ---
 
@@ -15,7 +35,7 @@ async function salvarResultado() {
         return;
     }
 
-    // Usamos POST para enviar dados de forma mais segura
+    // Usamos POST para enviar dados para a API
     const url = `${API_URL}?action=salvar&cpf=${cpfInput}&resultado=${resultadoInput}`;
 
     try {
@@ -40,13 +60,19 @@ async function salvarResultado() {
     }
 }
 
-// --- Lógica de Consulta (Ler/GET) ---
+// --- Lógica de Consulta Pública (Ler/GET) ---
 
-async function consultarResultado() {
-    const cpfConsulta = document.getElementById('cpfConsulta').value.replace(/\D/g, '');
-    const resultadoDiv = document.getElementById('resultado');
+async function consultarResultado(formId) {
+    // Determina qual campo CPF usar (index.html ou admin.html)
+    const cpfInputId = (formId === 'formConsultaPublica') ? 'cpfConsultaPublica' : 'cpfAdmin';
+    const outputDivId = (formId === 'formConsultaPublica') ? 'resultadoPublico' : 'consultaRapidaResultado';
+
+    const cpfConsulta = document.getElementById(cpfInputId).value.replace(/\D/g, '');
+    const resultadoDiv = document.getElementById(outputDivId);
     resultadoDiv.innerHTML = 'Consultando... Aguarde.';
     resultadoDiv.className = 'invalido';
+    resultadoDiv.style.padding = '10px'; 
+    resultadoDiv.style.border = '1px solid #ccc'; 
 
     if (cpfConsulta.length !== 11) {
         resultadoDiv.innerHTML = "Por favor, digite um CPF válido com 11 dígitos.";
@@ -75,7 +101,6 @@ async function consultarResultado() {
             textoFinal += `<span class="resultado-destaque">${data.resultado}</span>`;
             resultadoDiv.innerHTML = textoFinal;
             resultadoDiv.className = classe;
-
         } else if (data.status === 'nao_encontrado') {
             resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
             resultadoDiv.className = 'invalido';
@@ -84,5 +109,34 @@ async function consultarResultado() {
     } catch (error) {
         resultadoDiv.innerHTML = `Erro de conexão: Não foi possível acessar o banco de dados.`;
         resultadoDiv.className = 'positivo';
+    }
+}
+
+// Adiciona os listeners após o carregamento da página
+window.onload = function() {
+    // Listener para o formulário de consulta pública
+    const formPublica = document.getElementById('formConsultaPublica');
+    if (formPublica) {
+        formPublica.addEventListener('submit', function(e) {
+            e.preventDefault();
+            consultarResultado('formConsultaPublica');
+        });
+    }
+
+    // Listener para o formulário de cadastro Admin
+    const formAdmin = document.getElementById('formAdmin');
+    if (formAdmin) {
+        formAdmin.addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvarResultado();
+        });
+    }
+
+    // Listener para o botão de consulta rápida dentro do Admin
+    const btnConsultaAdmin = document.getElementById('btnConsultaAdmin');
+    if (btnConsultaAdmin) {
+        btnConsultaAdmin.addEventListener('click', function() {
+            consultarResultado('formAdmin'); // Reutiliza a função de consulta, mas com ID Admin
+        });
     }
 }
