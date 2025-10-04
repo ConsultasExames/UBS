@@ -12,33 +12,17 @@
         <h2>Cadastro/Atualização de Resultados</h2>
 
         <form id="formAdmin">
-            <label for="cpfAdmin">CPF (somente números):</label>
-            <input type="text" id="cpfAdmin" placeholder="Digite CPF" maxlength="11" required>
+            <label for="cpfAdmin">CPF (somente números - 11 dígitos):</label>
+            <input type="text" id="cpfAdmin" placeholder="11122233344" maxlength="11" required>
 
-            <label for="resultadoAdmin">Resultado (Ex: Positivo, Negativo, Inconclusivo, não disponível , disponível):</label>
-            <textarea id="resultadoAdmin" rows="3" placeholder="Digite o resultado completo do exame aqui." required></textarea>
+            <label for="resultadoAdmin">Resultado:</label>
+            <textarea id="resultadoAdmin" rows="3" placeholder="Digite o resultado completo. Ex: NEGATIVO, POSITIVO." required></textarea>
 
             <button type="submit">Salvar/Atualizar Resultado</button>
         </form>
 
         <div id="mensagemAdmin"></div>
-
-        <hr>
-
-        <h2>Resultados Cadastrados</h2>
-        <table id="tabelaResultados">
-            <thead>
-                <tr>
-                    <th>CPF</th>
-                    <th>Resultado</th>
-                    <th>Data Cadastro</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-
+        
         <p style="margin-top: 20px;"><a href="index.html">Voltar para a Consulta</a></p>
     </div>
 
@@ -47,7 +31,7 @@
         // Adiciona o listener de envio do formulário
         document.getElementById('formAdmin').addEventListener('submit', function(e) {
             e.preventDefault();
-            salvarResultado();
+            salvarResultado(); // Chama a função que usa a API do Google Sheets
         });
     </script>
 </body>

@@ -1,156 +1,88 @@
-// --- Lógica de Admin (Salvar) ---
+// ** COLE AQUI O URL DE API GERADO NO PASSO 2 **
+const API_URL = 'https://script.google.com/macros/s/AKfycbxptiwOyiUvJqMiI1XxuV77hQq-NxRnd9o68BGFjGC3sYuzhQUygi3k87WdeTrSEId5/exec'; 
 
-function salvarResultado() {
-    const cpfInput = document.getElementById('cpfAdmin').value.replace(/\D/g, ''); // Remove não-dígitos
+// --- Lógica de Admin (Salvar/POST) ---
+
+async function salvarResultado() {
+    const cpfInput = document.getElementById('cpfAdmin').value.replace(/\D/g, '');
     const resultadoInput = document.getElementById('resultadoAdmin').value.trim();
     const mensagemAdmin = document.getElementById('mensagemAdmin');
+    mensagemAdmin.textContent = 'Salvando... Aguarde.';
+    mensagemAdmin.className = 'invalido'; 
 
-    if (cpfInput.length !== 11) {
-        mensagemAdmin.textContent = "Erro: O CPF deve ter 11 dígitos.";
-        mensagemAdmin.className = 'invalido';
+    if (cpfInput.length !== 11 || !resultadoInput) {
+        mensagemAdmin.textContent = "Erro: CPF deve ter 11 dígitos e o resultado não pode ser vazio.";
         return;
     }
 
-    if (!resultadoInput) {
-        mensagemAdmin.textContent = "Erro: O campo de resultado não pode estar vazio.";
-        mensagemAdmin.className = 'invalido';
-        return;
-    }
+    // Usamos POST para enviar dados de forma mais segura
+    const url = `${API_URL}?action=salvar&cpf=${cpfInput}&resultado=${resultadoInput}`;
 
-    // 1. Pega os resultados existentes (ou um array vazio se não houver nada)
-    let resultados = JSON.parse(localStorage.getItem('resultadosExames')) || [];
+    try {
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
 
-    // 2. Verifica se o CPF já existe
-    const index = resultados.findIndex(res => res.cpf === cpfInput);
+        if (data.status === 'cadastrado' || data.status === 'atualizado') {
+            const acao = (data.status === 'cadastrado') ? 'cadastrado' : 'atualizado';
+            mensagemAdmin.textContent = `Resultado do CPF ${cpfInput} ${acao} com sucesso na nuvem!`;
+            mensagemAdmin.className = 'negativo';
+        } else {
+            mensagemAdmin.textContent = 'Erro ao salvar. Verifique o Apps Script e a URL.';
+            mensagemAdmin.className = 'positivo';
+        }
 
-    const novoRegistro = {
-        cpf: cpfInput,
-        resultado: resultadoInput,
-        data: new Date().toLocaleDateString('pt-BR')
-    };
+        document.getElementById('cpfAdmin').value = '';
+        document.getElementById('resultadoAdmin').value = '';
 
-    if (index > -1) {
-        // Atualiza o resultado
-        resultados[index] = novoRegistro;
-        mensagemAdmin.textContent = `Resultado do CPF ${cpfInput} atualizado com sucesso!`;
-    } else {
-        // Adiciona um novo resultado
-        resultados.push(novoRegistro);
-        mensagemAdmin.textContent = `Novo resultado para o CPF ${cpfInput} cadastrado com sucesso!`;
-    }
-
-    // 3. Salva a lista de volta no localStorage
-    localStorage.setItem('resultadosExames', JSON.stringify(resultados));
-
-    // Limpa os campos após salvar
-    document.getElementById('cpfAdmin').value = '';
-    document.getElementById('resultadoAdmin').value = '';
-
-    // Atualiza a tabela de resultados na página admin
-    if (document.getElementById('tabelaResultados')) {
-        carregarTabelaResultados();
+    } catch (error) {
+        mensagemAdmin.textContent = `Erro de conexão: Não foi possível alcançar o Google Sheets.`;
+        mensagemAdmin.className = 'positivo';
     }
 }
 
-// --- Lógica de Consulta (Ler) ---
+// --- Lógica de Consulta (Ler/GET) ---
 
-function consultarResultado() {
+async function consultarResultado() {
     const cpfConsulta = document.getElementById('cpfConsulta').value.replace(/\D/g, '');
     const resultadoDiv = document.getElementById('resultado');
+    resultadoDiv.innerHTML = 'Consultando... Aguarde.';
+    resultadoDiv.className = 'invalido';
 
     if (cpfConsulta.length !== 11) {
         resultadoDiv.innerHTML = "Por favor, digite um CPF válido com 11 dígitos.";
-        resultadoDiv.className = 'invalido';
         return;
     }
 
-    // Pega os resultados
-    const resultados = JSON.parse(localStorage.getItem('resultadosExames')) || [];
+    // Usamos GET para consultar dados
+    const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
 
-    // Busca o resultado pelo CPF
-    const resultado = resultados.find(res => res.cpf === cpfConsulta);
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    if (resultado) {
-        const resTexto = resultado.resultado.toLowerCase();
-        let classe = 'invalido';
-        let textoFinal = `**Resultado do Exame** (${resultado.data}): <br>`;
+        if (data.status === 'sucesso') {
+            const resTexto = data.resultado.toLowerCase();
+            let classe = 'invalido';
+            let textoFinal = `**Resultado do Exame** (Data: ${data.dataCadastro}): <br>`;
 
-        if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
-            classe = 'positivo';
-            textoFinal += `<span class="resultado-destaque">${resultado.resultado}</span>`;
-        } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
-            classe = 'negativo';
-            textoFinal += `<span class="resultado-destaque">${resultado.resultado}</span>`;
-        } else {
-            // Outros resultados (aguardando, inconclusivo, etc.)
-            classe = 'invalido';
-            textoFinal += `<span class="resultado-destaque">${resultado.resultado}</span>`;
+            if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
+                classe = 'positivo';
+            } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
+                classe = 'negativo';
+            }
+
+            // O resultado final usa a classe para a cor, mas exibe o texto completo
+            textoFinal += `<span class="resultado-destaque">${data.resultado}</span>`;
+            resultadoDiv.innerHTML = textoFinal;
+            resultadoDiv.className = classe;
+
+        } else if (data.status === 'nao_encontrado') {
+            resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
+            resultadoDiv.className = 'invalido';
         }
 
-        resultadoDiv.innerHTML = textoFinal;
-        resultadoDiv.className = classe;
-
-    } else {
-        resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
-        resultadoDiv.className = 'invalido';
+    } catch (error) {
+        resultadoDiv.innerHTML = `Erro de conexão: Não foi possível acessar o banco de dados.`;
+        resultadoDiv.className = 'positivo';
     }
 }
-
-// --- Funções para a Tabela Admin ---
-
-function carregarTabelaResultados() {
-    const tabelaBody = document.querySelector('#tabelaResultados tbody');
-    if (!tabelaBody) return; // Sai se não estiver na página admin
-
-    tabelaBody.innerHTML = ''; // Limpa as linhas existentes
-    const resultados = JSON.parse(localStorage.getItem('resultadosExames')) || [];
-
-    resultados.forEach(res => {
-        const row = tabelaBody.insertRow();
-        const cellCPF = row.insertCell();
-        const cellResultado = row.insertCell();
-        const cellData = row.insertCell();
-        const cellAcoes = row.insertCell();
-
-        cellCPF.textContent = formatarCPF(res.cpf);
-        cellResultado.textContent = res.resultado;
-        cellData.textContent = res.data;
-
-        const btnExcluir = document.createElement('button');
-        btnExcluir.textContent = 'Excluir';
-        btnExcluir.onclick = () => excluirResultado(res.cpf);
-        btnExcluir.style.backgroundColor = '#dc3545';
-        btnExcluir.style.color = 'white';
-        btnExcluir.style.width = 'auto';
-        btnExcluir.style.padding = '5px 10px';
-        btnExcluir.style.margin = '0';
-        cellAcoes.appendChild(btnExcluir);
-    });
-}
-
-function excluirResultado(cpf) {
-    if (confirm(`Tem certeza que deseja excluir o resultado do CPF ${formatarCPF(cpf)}?`)) {
-        let resultados = JSON.parse(localStorage.getItem('resultadosExames')) || [];
-        resultados = resultados.filter(res => res.cpf !== cpf);
-        localStorage.setItem('resultadosExames', JSON.stringify(resultados));
-        carregarTabelaResultados();
-    }
-}
-
-function formatarCPF(cpf) {
-    // Formata o CPF como XXX.XXX.XXX-XX
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-}
-
-// --- Adiciona listeners para rodar as funções ---
-
-// Executa carregarTabelaResultados quando a página admin.html carregar
-if (document.getElementById('tabelaResultados')) {
-    window.onload = carregarTabelaResultados;
-}
-
-// Exemplo de como aplicar o listener em admin.html (Será colocado lá)
-// document.getElementById('formAdmin').addEventListener('submit', function(e) {
-//     e.preventDefault();
-//     salvarResultado();
-// });
