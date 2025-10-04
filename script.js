@@ -1,5 +1,5 @@
 // ** COLE AQUI O URL DE API GERADO NO PASSO 2 **
-const API_URL = 'https://script.google.com/macros/s/AKfycbxptiwOyiUvJqMiI1XxuV77hQq-NxRnd9o68BGFjGC3sYuzhQUygi3k87WdeTrSEId5/exec'; 
+const API_URL = 'https://script.google.com/macros/library/d/1m619kX1N1dvRzUUZXqPgj3Bgzi5IKcZKI9BvnMdIb3YnjcWKjXC97K3R/1'; 
 
 // --- Lógica de Admin (Salvar/POST) ---
 
