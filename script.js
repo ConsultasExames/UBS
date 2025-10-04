@@ -1,5 +1,5 @@
 // ** COLE AQUI O URL DE API GERADO NO PASSO 2 (Do nosso guia anterior) **
-const API_URL = 'https://script.google.com/macros/s/AKfycbz0zs8ajZ5H_f6H68XVcz-KzXzG8CFdXPbxxzWLbgT3qWFkgnHcq4xbW_LCG3WwB1h0/exec'; 
+const API_URL = 'https://script.google.com/macros/s/AKfycbxiPJJEwIejR0fyZ-6qcveZxrkttBkcPE1UF3EJhyq5r-2BTc-Kd8vQvLQOzk6O9t6Y/exec'; 
 // --- Senha simples para a Área Admin ---
 const SENHA_ADMIN = 'admin123'; // *** TROQUE ISSO POR UMA SENHA FORTE! ***
 
