@@ -1,0 +1,74 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+}
+
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
+}
+
+h1, h2 {
+    color: #007bff;
+    text-align: center;
+}
+
+input[type="text"], input[type="submit"], textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+}
+
+input[type="submit"], button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+input[type="submit"]:hover, button:hover {
+    background-color: #218838;
+}
+
+#resultado, #mensagemAdmin {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.positivo { background-color: #ffdddd; color: #dc3545; }
+.negativo { background-color: #ddffdd; color: #28a745; }
+.invalido { background-color: #ffffdd; color: #ffc107; }
+
+/* Tabela para Admin */
+#tabelaResultados {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#tabelaResultados th, #tabelaResultados td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#tabelaResultados th {
+    background-color: #007bff;
+    color: white;
+}

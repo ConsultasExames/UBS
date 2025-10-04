@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Cadastro de Resultados</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Área Administrativa</h1>
+        <h2>Cadastro/Atualização de Resultados</h2>
+
+        <form id="formAdmin">
+            <label for="cpfAdmin">CPF (somente números):</label>
+            <input type="text" id="cpfAdmin" placeholder="Digite CPF" maxlength="11" required>
+
+            <label for="resultadoAdmin">Resultado (Ex: Positivo, Negativo, Inconclusivo, não disponível , disponível):</label>
+            <textarea id="resultadoAdmin" rows="3" placeholder="Digite o resultado completo do exame aqui." required></textarea>
+
+            <button type="submit">Salvar/Atualizar Resultado</button>
+        </form>
+
+        <div id="mensagemAdmin"></div>
+
+        <hr>
+
+        <h2>Resultados Cadastrados</h2>
+        <table id="tabelaResultados">
+            <thead>
+                <tr>
+                    <th>CPF</th>
+                    <th>Resultado</th>
+                    <th>Data Cadastro</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <p style="margin-top: 20px;"><a href="index.html">Voltar para a Consulta</a></p>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Adiciona o listener de envio do formulário
+        document.getElementById('formAdmin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            salvarResultado();
+        });
+    </script>
+</body>
+</html>
