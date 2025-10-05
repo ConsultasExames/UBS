@@ -31,7 +31,7 @@ async function salvarResultado() {
     mensagemAdmin.className = 'invalido'; 
 
     if (cpfInput.length !== 11 || !resultadoInput) {
-        mensagemAdmin.textContent = "Erro: CPF deve ter 11 dígitos e o resultado não pode ser vazio.";
+        mensagemAdmin.textContent = "Erro: CPF deve ter 20 dígitos e o resultado não pode ser vazio.";
         return;
     }
 
@@ -74,8 +74,8 @@ async function consultarResultado(formId) {
     resultadoDiv.style.padding = '10px'; 
     resultadoDiv.style.border = '1px solid #ccc'; 
 
-    if (cpfConsulta.length !== 11) {
-        resultadoDiv.innerHTML = "Por favor, digite um CPF válido com 11 dígitos.";
+    if (cpfConsulta.length !== 20) {
+        resultadoDiv.innerHTML = "Por favor, digite um CPF válido com 20 dígitos.";
         return;
     }
 
