@@ -30,10 +30,6 @@ async function salvarResultado() {
     mensagemAdmin.textContent = 'Salvando... Aguarde.';
     mensagemAdmin.className = 'invalido'; 
 
-    if (cpfInput.length !== 11 || !resultadoInput) {
-        mensagemAdmin.textContent = "Erro: CPF deve ter 20 dígitos e o resultado não pode ser vazio.";
-        return;
-    }
 
     // Usamos POST para enviar dados para a API
     const url = `${API_URL}?action=salvar&cpf=${cpfInput}&resultado=${resultadoInput}`;
@@ -73,11 +69,6 @@ async function consultarResultado(formId) {
     resultadoDiv.className = 'invalido';
     resultadoDiv.style.padding = '10px'; 
     resultadoDiv.style.border = '1px solid #ccc'; 
-
-    if (cpfConsulta.length !== 20) {
-        resultadoDiv.innerHTML = "Por favor, digite um CPF válido com 20 dígitos.";
-        return;
-    }
 
     // Usamos GET para consultar dados
     const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
