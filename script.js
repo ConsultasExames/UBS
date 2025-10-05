@@ -87,23 +87,46 @@ async function consultarResultado(formId) {
         const data = await response.json();
 
         if (data.status === 'sucesso') {
-            const resTexto = data.resultado.toLowerCase();
-            let classe = 'invalido';
-            let textoFinal = `**Resultado do Exame** (Data: ${data.dataCadastro}): <br>`;
+    const resTexto = data.resultado.toLowerCase();
+    let classe = 'invalido';
+    let dataExame = data.dataCadastro || "Data Desconhecida"; 
 
-            if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
-                classe = 'positivo';
-            } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
-                classe = 'negativo';
-            }
+    // TENTA CONVERTER A DATA RECEBIDA (se estiver no formato ISO estranho)
+    let dataDisplay = dataExame;
+    try {
+        // Se o Sheets enviou um formato ISO ou objeto Date
+        const dataObj = new Date(dataExame); 
+        if (!isNaN(dataObj.getTime())) {
+            // Formata para DD/MM/AAAA (Se o Sheets já envia DD/MM/AAAA, ele usará a própria string)
+            dataDisplay = dataObj.toLocaleDateString('pt-BR'); 
+        }
+    } catch (e) {
+        // Caso a conversão falhe, usa o valor original
+        dataDisplay = dataExame;
+    }
+    
+    // Define a classe de cor com base no resultado
+    if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
+        classe = 'positivo';
+    } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
+        classe = 'negativo';
+    }
 
-            // O resultado final usa a classe para a cor, mas exibe o texto completo
-            textoFinal += `<span class="resultado-destaque">${data.resultado}</span>`;
-            resultadoDiv.innerHTML = textoFinal;
-            resultadoDiv.className = classe;
-        } else if (data.status === 'nao_encontrado') {
-            resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
-            resultadoDiv.className = 'invalido';
+    // ESTRUTURA HTML FINAL MELHORADA
+    const textoFinal = `
+        <div class="resultado-header">
+            <strong>Resultado do Exame</strong>
+        </div>
+        <div class="resultado-data">
+            Data: <span>${dataDisplay}</span>
+        </div>
+        <div class="resultado-valor">
+            ${data.resultado}
+        </div>
+    `;
+
+    resultadoDiv.innerHTML = textoFinal;
+    resultadoDiv.className = classe;
         }
 
     } catch (error) {
