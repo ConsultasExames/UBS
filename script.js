@@ -154,3 +154,46 @@ window.onload = function() {
         });
     }
 }
+// --- FUNÇÃO PARA MÁSCARA DE CPF ---
+
+function aplicarMascaraCPF(event) {
+    let input = event.target;
+    let value = input.value;
+
+    // 1. Remove qualquer caractere que não seja dígito
+    value = value.replace(/\D/g, "");
+
+    // 2. Limita o tamanho a 11 dígitos
+    value = value.substring(0, 11);
+
+    // 3. Aplica a máscara
+    if (value.length > 9) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})$/, "$1.$2.$3");
+    } else if (value.length > 3) {
+        value = value.replace(/^(\d{3})(\d{3})$/, "$1.$2");
+    } else if (value.length > 0) {
+        value = value.replace(/^(\d{3})$/, "$1");
+    }
+
+    input.value = value;
+}
+
+// FIM DA FUNÇÃO DE MÁSCARA
+// Adiciona os eventos para aplicar a máscara nos dois campos de CPF
+window.onload = function() {
+    // ... (Mantenha todos os listeners que já estavam aqui: formPublica, formAdmin, btnConsultaAdmin)
+    
+    // NOVO: Adiciona a máscara ao campo de consulta pública
+    const cpfPublico = document.getElementById('cpfConsultaPublica');
+    if (cpfPublico) {
+        cpfPublico.addEventListener('input', aplicarMascaraCPF);
+    }
+
+    // NOVO: Adiciona a máscara ao campo de admin
+    const cpfAdmin = document.getElementById('cpfAdmin');
+    if (cpfAdmin) {
+        cpfAdmin.addEventListener('input', aplicarMascaraCPF);
+    }
+}
