@@ -29,7 +29,11 @@
 
         <form id="formConsultaPublica">
             <label for="cpfConsultaPublica">CPF:</label>
-            <input type="text" id="cpfConsultaPublica" placeholder="Digite CPF" required>
+            <input type="text" id="cpfConsultaPublica" 
+       placeholder="000.000.000-00" 
+       inputmode="numeric" 
+       onkeyup="aplicarMascaraCPF(event)" 
+       required>
 
             <button type="submit">Consultar Resultado</button>
         </form>
@@ -44,7 +48,11 @@
 
         <form id="formAdmin">
             <label for="cpfAdmin">CPF:</label>
-            <input type="text" id="cpfAdmin" placeholder="11122233344" required>
+            <input type="text" id="cpfAdmin" 
+       placeholder="000.000.000-00" 
+       inputmode="numeric" 
+       onkeyup="aplicarMascaraCPF(event)" 
+       required>
 
             <button type="button" id="btnConsultaAdmin">Consultar Resultado Atual</button>
             
