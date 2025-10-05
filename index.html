@@ -27,12 +27,16 @@
         <h1>Consulta de Resultados</h1>
         <p>Informe seu CPF para visualizar o resultado do exame.</p>
 
-        <form id="formConsultaPublica">
+        <div id="formConsultaPublica">
             <label for="cpfConsultaPublica">CPF:</label>
-            <input type="text" id="cpfConsultaPublica" placeholder="Digite CPF" required>
+            <input type="text" 
+                   id="cpfConsultaPublica" 
+                   placeholder="Digite apenas os números (11 dígitos)" 
+                   inputmode="numeric" 
+                   required>
 
-            <button type="submit">Consultar Resultado</button>
-        </form>
+            <button type="button" onclick="consultarResultado('formConsultaPublica')">Consultar Resultado</button>
+        </div>
 
         <div id="resultadoPublico">
             </div>
@@ -44,7 +48,11 @@
 
         <form id="formAdmin">
             <label for="cpfAdmin">CPF:</label>
-            <input type="text" id="cpfAdmin" placeholder="Digite CPF" required>
+            <input type="text" 
+                   id="cpfAdmin" 
+                   placeholder="Digite apenas os números (11 dígitos)" 
+                   inputmode="numeric" 
+                   required>
 
             <button type="button" id="btnConsultaAdmin">Consultar Resultado Atual</button>
             
@@ -54,7 +62,7 @@
             <label for="resultadoAdmin">Resultado:</label>
             <textarea id="resultadoAdmin" rows="3" placeholder="Digite o resultado completo. Ex: NEGATIVO, POSITIVO." required></textarea>
 
-            <button type="submit">Salvar/Atualizar Resultado</button>
+            <button type="submit">Salvar/Atualizar Resultado</button> 
         </form>
 
         <div id="mensagemAdmin"></div>
@@ -67,4 +75,5 @@
     <script src="script.js"></script>
     
 </body>
+</html>
 </html>
