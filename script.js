@@ -2,15 +2,14 @@
 // 1. CONFIGURAÇÕES CRÍTICAS
 // ======================================================================
 
-// ⚠️ ATUALIZE ESTA URL com o link da sua API do Google Apps Script (Deployment)
+// ⚠️ ATUALIZE ESTA URL com o link da sua API do Google Apps Script
 const API_URL = 'https://script.google.com/macros/s/AKfycbxiPJJEwIejR0fyZ-6qcveZxrkttBkcPE1UF3EJhyq5r-2BTc-Kd8vQvLQOzk6O9t6Y/exec'; 
-const SENHA_ADMIN = 'UBS@20252026'; // Defina sua senha de administrador
+const SENHA_ADMIN = 'UBS@20252026'; 
 
 // ======================================================================
 // 2. FUNÇÕES DE UTILIDADE E CONTROLE DE TELA
 // ======================================================================
 
-// Exibe a área de administração após a senha
 function exibirAreaAdmin() {
     const senha = prompt("Digite a senha de administrador:");
     if (senha === SENHA_ADMIN) {
@@ -26,14 +25,13 @@ function exibirAreaAdmin() {
     }
 }
 
-// Volta para a área de consulta pública
 function voltarParaConsulta() {
     document.getElementById('area-admin').style.display = 'none';
     document.getElementById('area-consulta-publica').style.display = 'block';
     document.getElementById('link-admin').style.display = 'block';
     
-    // Limpa os campos e mensagens
-    document.getElementById('cpfAdmin').value = '';
+    // Limpa os campos e mensagens (agora CNS)
+    document.getElementById('cnsAdmin').value = '';
     document.getElementById('resultadoAdmin').value = '';
     document.getElementById('mensagemAdmin').innerHTML = '';
     document.getElementById('consultaRapidaResultado').innerHTML = '';
@@ -41,21 +39,20 @@ function voltarParaConsulta() {
 
 
 // ======================================================================
-// 3. FUNÇÃO DE CONSULTA (CHAVE PARA RESOLVER O PROBLEMA DO 'AGUARDE')
+// 3. FUNÇÃO DE CONSULTA (AGORA CNS)
 // ======================================================================
 
 async function consultarResultado(formId) {
-    // Determina a div de exibição do resultado
     const resultadoDiv = document.getElementById(formId === 'formConsultaPublica' ? 'resultadoPublico' : 'consultaRapidaResultado');
     
-    // Pega o elemento do CPF (funciona para as duas áreas)
-    const cpfElement = document.getElementById(formId === 'formConsultaPublica' ? 'cpfConsultaPublica' : 'cpfAdmin');
-    const cpfConsulta = cpfElement.value.replace(/\D/g, ''); // Limpa e pega o CPF
+    // Pega o elemento do CNS
+    const cnsElement = document.getElementById(formId === 'formConsultaPublica' ? 'cnsConsultaPublica' : 'cnsAdmin');
+    const cnsConsulta = cnsElement.value.replace(/\D/g, ''); // Limpa e pega o CNS
 
     // 1. Validação de Campo Vazio
-    if (cpfConsulta === '') {
+    if (cnsConsulta === '') {
         resultadoDiv.className = 'invalido';
-        resultadoDiv.innerHTML = "Por favor, preencha o campo CPF.";
+        resultadoDiv.innerHTML = "Por favor, preencha o campo CNS.";
         return;
     }
 
@@ -64,9 +61,10 @@ async function consultarResultado(formId) {
     resultadoDiv.innerHTML = "Consultando... Aguarde.";
     
     try {
-        const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
+        // MUDANÇA CRÍTICA: O parâmetro na URL agora é 'cns'
+        const url = `${API_URL}?action=consultar&cns=${cnsConsulta}`;
         
-        // Timeout para garantir que o 'Aguarde' não fique para sempre (10 segundos)
+        // Timeout para evitar travamento
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); 
 
@@ -79,7 +77,7 @@ async function consultarResultado(formId) {
         
         const responseData = await response.json();
 
-        // 2. Lógica de Sucesso ou Não Encontrado (Retorno do Google Apps Script)
+        // 2. Lógica de Sucesso ou Não Encontrado
         if (responseData.status === 'sucesso') {
             const resTexto = responseData.resultado.toLowerCase();
             let classe = 'invalido';
@@ -110,9 +108,8 @@ async function consultarResultado(formId) {
             resultadoDiv.className = classe; 
 
         } else if (responseData.status === 'nao_encontrado') {
-            // Se o CPF não foi encontrado (resolve o problema de travamento)
             resultadoDiv.className = 'invalido';
-            resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
+            resultadoDiv.innerHTML = "CNS não encontrado ou resultado ainda não cadastrado.";
         
         } else {
             resultadoDiv.className = 'invalido';
@@ -120,7 +117,7 @@ async function consultarResultado(formId) {
         }
 
     } catch (error) {
-        // 3. O BLOCO CATCH: Garante que a mensagem de "Aguarde" seja limpa em caso de falha
+        // 3. BLOCO CATCH: Garante que o 'Aguarde' suma em caso de falha
         resultadoDiv.className = 'invalido';
         if (error.name === 'AbortError') {
              resultadoDiv.innerHTML = "Tempo limite excedido. Tente novamente mais tarde.";
@@ -136,14 +133,14 @@ async function consultarResultado(formId) {
 // ======================================================================
 
 async function salvarResultado() {
-    const cpfInput = document.getElementById('cpfAdmin').value.replace(/\D/g, '');
+    const cnsInput = document.getElementById('cnsAdmin').value.replace(/\D/g, ''); // Agora CNS
     const resultadoInput = document.getElementById('resultadoAdmin').value;
     const mensagemAdmin = document.getElementById('mensagemAdmin');
     
-    // Nenhuma validação de comprimento de CPF (sem limites)
-    if (cpfInput === '' || resultadoInput === '') {
+    // Validação de campos vazios
+    if (cnsInput === '' || resultadoInput === '') {
         mensagemAdmin.className = 'invalido';
-        mensagemAdmin.innerHTML = "Erro: CPF e Resultado são obrigatórios.";
+        mensagemAdmin.innerHTML = "Erro: CNS e Resultado são obrigatórios.";
         return;
     }
 
@@ -153,7 +150,7 @@ async function salvarResultado() {
     try {
         const formData = new URLSearchParams();
         formData.append('action', 'salvar');
-        formData.append('cpf', cpfInput);
+        formData.append('cns', cnsInput); // MUDANÇA: 'cns'
         formData.append('resultado', resultadoInput);
 
         const response = await fetch(API_URL, {
@@ -167,12 +164,9 @@ async function salvarResultado() {
 
         const data = await response.json();
 
-        if (data.status === 'cadastrado') {
+        if (data.status === 'cadastrado' || data.status === 'atualizado') {
             mensagemAdmin.className = 'positivo';
-            mensagemAdmin.innerHTML = 'Resultado cadastrado com sucesso!';
-        } else if (data.status === 'atualizado') {
-            mensagemAdmin.className = 'positivo';
-            mensagemAdmin.innerHTML = 'Resultado atualizado com sucesso!';
+            mensagemAdmin.innerHTML = data.status === 'cadastrado' ? 'Resultado cadastrado com sucesso!' : 'Resultado atualizado com sucesso!';
         } else {
             mensagemAdmin.className = 'invalido';
             mensagemAdmin.innerHTML = 'Erro ao salvar. Status desconhecido.';
@@ -198,23 +192,13 @@ window.onload = function() {
         });
     }
 
-    // Listener para o botão de consulta rápida dentro do Admin (Usa 'click' e a função de consulta)
+    // Listener para o botão de consulta rápida dentro do Admin 
     const btnConsultaAdmin = document.getElementById('btnConsultaAdmin');
     if (btnConsultaAdmin) {
         btnConsultaAdmin.addEventListener('click', function() {
             consultarResultado('formAdmin'); 
         });
     }
-
-    // NOTA: O formulário público usa 'onclick="consultarResultado(...)"" diretamente no HTML.
-    // Se o seu index.html ainda usa <form> e type="submit", adicione o listener aqui:
-    /*
-    const formPublica = document.getElementById('formConsultaPublica');
-    if (formPublica) {
-        formPublica.addEventListener('submit', function(e) {
-            e.preventDefault();
-            consultarResultado('formConsultaPublica');
-        });
-    }
-    */
+    
+    // O formulário público usa onclick no HTML, então não precisa de listener aqui.
 }
