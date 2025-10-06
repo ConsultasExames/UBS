@@ -59,71 +59,94 @@ async function salvarResultado() {
 // --- Lógica de Consulta Pública (Ler/GET) ---
 
 async function consultarResultado(formId) {
-    // Determina qual campo CPF usar (index.html ou admin.html)
-    const cpfInputId = (formId === 'formConsultaPublica') ? 'cpfConsultaPublica' : 'cpfAdmin';
-    const outputDivId = (formId === 'formConsultaPublica') ? 'resultadoPublico' : 'consultaRapidaResultado';
+    // A função precisa ser assíncrona (async) para usar await
+async function consultarResultado(formId) {
+    const resultadoDiv = document.getElementById('resultadoPublico');
+    const cpfElement = document.getElementById(formId === 'formConsultaPublica' ? 'cpfConsultaPublica' : 'cpfAdmin');
+    const cpfConsulta = cpfElement.value.replace(/\D/g, ''); // Limpa e pega o CPF
 
-    const cpfConsulta = document.getElementById(cpfInputId).value.replace(/\D/g, '');
-    const resultadoDiv = document.getElementById(outputDivId);
-    resultadoDiv.innerHTML = 'Consultando... Aguarde.';
+    // 1. Validação de Campo Vazio
+    if (cpfConsulta === '') {
+        resultadoDiv.className = 'invalido';
+        resultadoDiv.innerHTML = "Por favor, preencha o campo CPF.";
+        return;
+    }
+
+    // Exibe a mensagem de 'Consultando...'
     resultadoDiv.className = 'invalido';
-    resultadoDiv.style.padding = '10px'; 
-    resultadoDiv.style.border = '1px solid #ccc'; 
-
-    // Usamos GET para consultar dados
-    const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status === 'sucesso') {
-    const resTexto = data.resultado.toLowerCase();
-    let classe = 'invalido';
-    let dataExame = data.dataCadastro || "Data Desconhecida"; 
-
-    // TENTA CONVERTER A DATA RECEBIDA (se estiver no formato ISO estranho)
-    let dataDisplay = dataExame;
-    try {
-        // Se o Sheets enviou um formato ISO ou objeto Date
-        const dataObj = new Date(dataExame); 
-        if (!isNaN(dataObj.getTime())) {
-            // Formata para DD/MM/AAAA (Se o Sheets já envia DD/MM/AAAA, ele usará a própria string)
-            dataDisplay = dataObj.toLocaleDateString('pt-BR'); 
-        }
-    } catch (e) {
-        // Caso a conversão falhe, usa o valor original
-        dataDisplay = dataExame;
-    }
+    resultadoDiv.innerHTML = "Consultando... Aguarde.";
     
-    // Define a classe de cor com base no resultado
-    if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
-        classe = 'positivo';
-    } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
-        classe = 'negativo';
-    }
+    // VARIÁVEL QUE VAI RECEBER A RESPOSTA
+    let responseData = null;
 
-    // ESTRUTURA HTML FINAL MELHORADA
-    const textoFinal = `
-        <div class="resultado-header">
-            <strong>Resultado do Exame</strong>
-        </div>
-        <div class="resultado-data">
-            Data: <span>${dataDisplay}</span>
-        </div>
-        <div class="resultado-valor">
-            ${data.resultado}
-        </div>
-    `;
+    try {
+        const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
+        
+        // Timeout para garantir que o 'Aguarde' não fique para sempre
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
 
-    resultadoDiv.innerHTML = textoFinal;
-    resultadoDiv.className = classe;
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId); // Limpa o timeout se a resposta for rápida
+
+        if (!response.ok) {
+            throw new Error(`Erro de Rede: ${response.status}`);
+        }
+        
+        responseData = await response.json();
+
+        // 2. Lógica de Sucesso ou Não Encontrado
+        if (responseData.status === 'sucesso') {
+            const resTexto = responseData.resultado.toLowerCase();
+            let classe = 'invalido';
+            let dataExame = responseData.dataCadastro || "Data Desconhecida"; 
+            
+            // Tenta converter a data para um formato amigável (DD/MM/AAAA)
+            let dataDisplay = dataExame;
+            try {
+                const dataObj = new Date(dataExame); 
+                if (!isNaN(dataObj.getTime())) {
+                    dataDisplay = dataObj.toLocaleDateString('pt-BR'); 
+                }
+            } catch (e) { /* Usa o formato original se falhar */ }
+            
+            // Define a classe de cor com base no resultado
+            if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
+                classe = 'positivo';
+            } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
+                classe = 'negativo';
+            }
+
+            // Exibe o resultado formatado
+            resultadoDiv.innerHTML = `
+                <div class="resultado-header"><strong>Resultado do Exame</strong></div>
+                <div class="resultado-data">Data: <span>${dataDisplay}</span></div>
+                <div class="resultado-valor">${responseData.resultado}</div>
+            `;
+            resultadoDiv.className = classe; 
+
+        } else if (responseData.status === 'nao_encontrado') {
+            resultadoDiv.className = 'invalido';
+            resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
+        
+        } else {
+            // Se o status for 'erro_interno' do Apps Script
+            resultadoDiv.className = 'invalido';
+            resultadoDiv.innerHTML = "Erro interno do servidor. Tente novamente mais tarde.";
         }
 
     } catch (error) {
-        resultadoDiv.innerHTML = `Erro de conexão: Não foi possível acessar o banco de dados.`;
-        resultadoDiv.className = 'positivo';
+        // 3. Lógica de Erro de Conexão/Timeout
+        resultadoDiv.className = 'invalido';
+        if (error.name === 'AbortError') {
+             resultadoDiv.innerHTML = "Tempo limite excedido. O servidor demorou muito para responder.";
+        } else {
+             resultadoDiv.innerHTML = `Erro na consulta: ${error.message}`;
+        }
     }
+    
+    // Este bloco 'finally' não é estritamente necessário se o código acima
+    // sempre substituir o innerHTML, mas garante que o UI não fique travado.
 }
 
 // Adiciona os listeners após o carregamento da página
