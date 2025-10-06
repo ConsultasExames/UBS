@@ -3,8 +3,8 @@
 // ======================================================================
 
 // ⚠️ ATUALIZE ESTA URL com o link da sua API do Google Apps Script
-const API_URL = 'https://script.google.com/macros/s/AKfycbxiPJJEwIejR0fyZ-6qcveZxrkttBkcPE1UF3EJhyq5r-2BTc-Kd8vQvLQOzk6O9t6Y/exec'; 
-const SENHA_ADMIN = 'UBS@20252026'; 
+const API_URL = 'https://script.google.com/macros/s/AKfycby6vC4P1p3iU_UhIn--rIlPA4rOkHSrsHNX9dBFfRvFg3L-WF0WxVVJJkYnAC5icv0/exec'; 
+const SENHA_ADMIN = '@@@UBS2025'; 
 
 // ======================================================================
 // 2. FUNÇÕES DE UTILIDADE E CONTROLE DE TELA
@@ -17,7 +17,6 @@ function exibirAreaAdmin() {
         document.getElementById('area-admin').style.display = 'block';
         document.getElementById('link-admin').style.display = 'none';
         
-        // Limpa a mensagem anterior
         document.getElementById('resultadoPublico').innerHTML = '';
         document.getElementById('resultadoPublico').className = '';
     } else if (senha !== null) {
@@ -30,7 +29,7 @@ function voltarParaConsulta() {
     document.getElementById('area-consulta-publica').style.display = 'block';
     document.getElementById('link-admin').style.display = 'block';
     
-    // Limpa os campos e mensagens (agora CNS)
+    // Limpa os campos e mensagens (CNS)
     document.getElementById('cnsAdmin').value = '';
     document.getElementById('resultadoAdmin').value = '';
     document.getElementById('mensagemAdmin').innerHTML = '';
@@ -39,17 +38,17 @@ function voltarParaConsulta() {
 
 
 // ======================================================================
-// 3. FUNÇÃO DE CONSULTA (AGORA CNS)
+// 3. FUNÇÃO DE CONSULTA (AGORA CNS - Corrigido o erro de travamento)
 // ======================================================================
 
 async function consultarResultado(formId) {
     const resultadoDiv = document.getElementById(formId === 'formConsultaPublica' ? 'resultadoPublico' : 'consultaRapidaResultado');
     
-    // Pega o elemento do CNS
+    // IDs dos inputs alterados para cnsConsultaPublica e cnsAdmin
     const cnsElement = document.getElementById(formId === 'formConsultaPublica' ? 'cnsConsultaPublica' : 'cnsAdmin');
     const cnsConsulta = cnsElement.value.replace(/\D/g, ''); // Limpa e pega o CNS
 
-    // 1. Validação de Campo Vazio
+    // Validação de Campo Vazio
     if (cnsConsulta === '') {
         resultadoDiv.className = 'invalido';
         resultadoDiv.innerHTML = "Por favor, preencha o campo CNS.";
@@ -61,7 +60,7 @@ async function consultarResultado(formId) {
     resultadoDiv.innerHTML = "Consultando... Aguarde.";
     
     try {
-        // MUDANÇA CRÍTICA: O parâmetro na URL agora é 'cns'
+        // O parâmetro na URL agora é 'cns'
         const url = `${API_URL}?action=consultar&cns=${cnsConsulta}`;
         
         // Timeout para evitar travamento
@@ -77,7 +76,7 @@ async function consultarResultado(formId) {
         
         const responseData = await response.json();
 
-        // 2. Lógica de Sucesso ou Não Encontrado
+        // Lógica de Sucesso ou Não Encontrado
         if (responseData.status === 'sucesso') {
             const resTexto = responseData.resultado.toLowerCase();
             let classe = 'invalido';
@@ -90,7 +89,7 @@ async function consultarResultado(formId) {
                 if (!isNaN(dataObj.getTime())) {
                     dataDisplay = dataObj.toLocaleDateString('pt-BR'); 
                 }
-            } catch (e) { /* Usa o formato original se falhar */ }
+            } catch (e) { /* Se falhar, usa o formato original */ }
             
             // Define a classe de cor (positivo/negativo)
             if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
@@ -108,6 +107,7 @@ async function consultarResultado(formId) {
             resultadoDiv.className = classe; 
 
         } else if (responseData.status === 'nao_encontrado') {
+            // Se o CNS não foi encontrado (CORREÇÃO: o Aguarde some e mostra a mensagem)
             resultadoDiv.className = 'invalido';
             resultadoDiv.innerHTML = "CNS não encontrado ou resultado ainda não cadastrado.";
         
@@ -117,7 +117,7 @@ async function consultarResultado(formId) {
         }
 
     } catch (error) {
-        // 3. BLOCO CATCH: Garante que o 'Aguarde' suma em caso de falha
+        // O BLOCO CATCH: Garante que o 'Aguarde' some em caso de falha de rede/timeout
         resultadoDiv.className = 'invalido';
         if (error.name === 'AbortError') {
              resultadoDiv.innerHTML = "Tempo limite excedido. Tente novamente mais tarde.";
@@ -137,7 +137,7 @@ async function salvarResultado() {
     const resultadoInput = document.getElementById('resultadoAdmin').value;
     const mensagemAdmin = document.getElementById('mensagemAdmin');
     
-    // Validação de campos vazios
+    // Validação de campos vazios (sem limite de comprimento de CNS)
     if (cnsInput === '' || resultadoInput === '') {
         mensagemAdmin.className = 'invalido';
         mensagemAdmin.innerHTML = "Erro: CNS e Resultado são obrigatórios.";
@@ -199,6 +199,4 @@ window.onload = function() {
             consultarResultado('formAdmin'); 
         });
     }
-    
-    // O formulário público usa onclick no HTML, então não precisa de listener aqui.
 }
