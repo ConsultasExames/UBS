@@ -1,67 +1,54 @@
-// ** COLE AQUI O URL DE API GERADO NO PASSO 2 (Do nosso guia anterior) **
+// ======================================================================
+// 1. CONFIGURAÇÕES CRÍTICAS
+// ======================================================================
+
+// ⚠️ ATUALIZE ESTA URL com o link da sua API do Google Apps Script (Deployment)
 const API_URL = 'https://script.google.com/macros/s/AKfycbxiPJJEwIejR0fyZ-6qcveZxrkttBkcPE1UF3EJhyq5r-2BTc-Kd8vQvLQOzk6O9t6Y/exec'; 
-// --- Senha simples para a Área Admin ---
-const SENHA_ADMIN = 'admin123'; // *** TROQUE ISSO POR UMA SENHA FORTE! ***
+const SENHA_ADMIN = 'UBS@20252026'; // Defina sua senha de administrador
 
-// --- Funções de Controle de Acesso e Visualização ---
+// ======================================================================
+// 2. FUNÇÕES DE UTILIDADE E CONTROLE DE TELA
+// ======================================================================
 
+// Exibe a área de administração após a senha
 function exibirAreaAdmin() {
-    const senhaDigitada = prompt("Por favor, digite a senha de administrador:");
-    if (senhaDigitada === SENHA_ADMIN) {
+    const senha = prompt("Digite a senha de administrador:");
+    if (senha === SENHA_ADMIN) {
         document.getElementById('area-consulta-publica').style.display = 'none';
         document.getElementById('area-admin').style.display = 'block';
-        alert("Acesso concedido à Área Admin.");
-    } else if (senhaDigitada !== null) { // Evita a mensagem se o usuário cancelar
-        alert("Senha incorreta. Acesso negado.");
+        document.getElementById('link-admin').style.display = 'none';
+        
+        // Limpa a mensagem anterior
+        document.getElementById('resultadoPublico').innerHTML = '';
+        document.getElementById('resultadoPublico').className = '';
+    } else if (senha !== null) {
+        alert("Senha incorreta.");
     }
 }
 
+// Volta para a área de consulta pública
 function voltarParaConsulta() {
-    document.getElementById('area-consulta-publica').style.display = 'block';
     document.getElementById('area-admin').style.display = 'none';
+    document.getElementById('area-consulta-publica').style.display = 'block';
+    document.getElementById('link-admin').style.display = 'block';
+    
+    // Limpa os campos e mensagens
+    document.getElementById('cpfAdmin').value = '';
+    document.getElementById('resultadoAdmin').value = '';
+    document.getElementById('mensagemAdmin').innerHTML = '';
+    document.getElementById('consultaRapidaResultado').innerHTML = '';
 }
 
-// --- Lógica de Admin (Salvar/POST) ---
 
-async function salvarResultado() {
-    const cpfInput = document.getElementById('cpfAdmin').value.replace(/\D/g, '');
-    const resultadoInput = document.getElementById('resultadoAdmin').value.trim();
-    const mensagemAdmin = document.getElementById('mensagemAdmin');
-    mensagemAdmin.textContent = 'Salvando... Aguarde.';
-    mensagemAdmin.className = 'invalido'; 
-
-
-    // Usamos POST para enviar dados para a API
-    const url = `${API_URL}?action=salvar&cpf=${cpfInput}&resultado=${resultadoInput}`;
-
-    try {
-        const response = await fetch(url, { method: 'POST' });
-        const data = await response.json();
-
-        if (data.status === 'cadastrado' || data.status === 'atualizado') {
-            const acao = (data.status === 'cadastrado') ? 'cadastrado' : 'atualizado';
-            mensagemAdmin.textContent = `Resultado do CPF ${cpfInput} ${acao} com sucesso na nuvem!`;
-            mensagemAdmin.className = 'negativo';
-        } else {
-            mensagemAdmin.textContent = 'Erro ao salvar. Verifique o Apps Script e a URL.';
-            mensagemAdmin.className = 'positivo';
-        }
-
-        document.getElementById('cpfAdmin').value = '';
-        document.getElementById('resultadoAdmin').value = '';
-
-    } catch (error) {
-        mensagemAdmin.textContent = `Erro de conexão: Não foi possível alcançar o Google Sheets.`;
-        mensagemAdmin.className = 'positivo';
-    }
-}
-
-// --- Lógica de Consulta Pública (Ler/GET) ---
+// ======================================================================
+// 3. FUNÇÃO DE CONSULTA (CHAVE PARA RESOLVER O PROBLEMA DO 'AGUARDE')
+// ======================================================================
 
 async function consultarResultado(formId) {
-    // A função precisa ser assíncrona (async) para usar await
-async function consultarResultado(formId) {
-    const resultadoDiv = document.getElementById('resultadoPublico');
+    // Determina a div de exibição do resultado
+    const resultadoDiv = document.getElementById(formId === 'formConsultaPublica' ? 'resultadoPublico' : 'consultaRapidaResultado');
+    
+    // Pega o elemento do CPF (funciona para as duas áreas)
     const cpfElement = document.getElementById(formId === 'formConsultaPublica' ? 'cpfConsultaPublica' : 'cpfAdmin');
     const cpfConsulta = cpfElement.value.replace(/\D/g, ''); // Limpa e pega o CPF
 
@@ -76,32 +63,29 @@ async function consultarResultado(formId) {
     resultadoDiv.className = 'invalido';
     resultadoDiv.innerHTML = "Consultando... Aguarde.";
     
-    // VARIÁVEL QUE VAI RECEBER A RESPOSTA
-    let responseData = null;
-
     try {
         const url = `${API_URL}?action=consultar&cpf=${cpfConsulta}`;
         
-        // Timeout para garantir que o 'Aguarde' não fique para sempre
+        // Timeout para garantir que o 'Aguarde' não fique para sempre (10 segundos)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+        const timeoutId = setTimeout(() => controller.abort(), 10000); 
 
         const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId); // Limpa o timeout se a resposta for rápida
+        clearTimeout(timeoutId); 
 
         if (!response.ok) {
             throw new Error(`Erro de Rede: ${response.status}`);
         }
         
-        responseData = await response.json();
+        const responseData = await response.json();
 
-        // 2. Lógica de Sucesso ou Não Encontrado
+        // 2. Lógica de Sucesso ou Não Encontrado (Retorno do Google Apps Script)
         if (responseData.status === 'sucesso') {
             const resTexto = responseData.resultado.toLowerCase();
             let classe = 'invalido';
             let dataExame = responseData.dataCadastro || "Data Desconhecida"; 
             
-            // Tenta converter a data para um formato amigável (DD/MM/AAAA)
+            // Trata a data para formato amigável
             let dataDisplay = dataExame;
             try {
                 const dataObj = new Date(dataExame); 
@@ -110,7 +94,7 @@ async function consultarResultado(formId) {
                 }
             } catch (e) { /* Usa o formato original se falhar */ }
             
-            // Define a classe de cor com base no resultado
+            // Define a classe de cor (positivo/negativo)
             if (resTexto.includes('positivo') || resTexto.includes('reagente')) {
                 classe = 'positivo';
             } else if (resTexto.includes('negativo') || resTexto.includes('não reagente')) {
@@ -126,41 +110,86 @@ async function consultarResultado(formId) {
             resultadoDiv.className = classe; 
 
         } else if (responseData.status === 'nao_encontrado') {
+            // Se o CPF não foi encontrado (resolve o problema de travamento)
             resultadoDiv.className = 'invalido';
             resultadoDiv.innerHTML = "CPF não encontrado ou resultado ainda não cadastrado.";
         
         } else {
-            // Se o status for 'erro_interno' do Apps Script
             resultadoDiv.className = 'invalido';
-            resultadoDiv.innerHTML = "Erro interno do servidor. Tente novamente mais tarde.";
+            resultadoDiv.innerHTML = "Erro interno do servidor. Status desconhecido.";
         }
 
     } catch (error) {
-        // 3. Lógica de Erro de Conexão/Timeout
+        // 3. O BLOCO CATCH: Garante que a mensagem de "Aguarde" seja limpa em caso de falha
         resultadoDiv.className = 'invalido';
         if (error.name === 'AbortError') {
-             resultadoDiv.innerHTML = "Tempo limite excedido. O servidor demorou muito para responder.";
+             resultadoDiv.innerHTML = "Tempo limite excedido. Tente novamente mais tarde.";
         } else {
-             resultadoDiv.innerHTML = `Erro na consulta: ${error.message}`;
+             resultadoDiv.innerHTML = `Erro na consulta. Verifique sua conexão.`;
         }
     }
-    
-    // Este bloco 'finally' não é estritamente necessário se o código acima
-    // sempre substituir o innerHTML, mas garante que o UI não fique travado.
 }
 
-// Adiciona os listeners após o carregamento da página
-window.onload = function() {
-    // Listener para o formulário de consulta pública
-    const formPublica = document.getElementById('formConsultaPublica');
-    if (formPublica) {
-        formPublica.addEventListener('submit', function(e) {
-            e.preventDefault();
-            consultarResultado('formConsultaPublica');
-        });
+
+// ======================================================================
+// 4. FUNÇÃO DE SALVAR/ATUALIZAR (ADMIN)
+// ======================================================================
+
+async function salvarResultado() {
+    const cpfInput = document.getElementById('cpfAdmin').value.replace(/\D/g, '');
+    const resultadoInput = document.getElementById('resultadoAdmin').value;
+    const mensagemAdmin = document.getElementById('mensagemAdmin');
+    
+    // Nenhuma validação de comprimento de CPF (sem limites)
+    if (cpfInput === '' || resultadoInput === '') {
+        mensagemAdmin.className = 'invalido';
+        mensagemAdmin.innerHTML = "Erro: CPF e Resultado são obrigatórios.";
+        return;
     }
 
-    // Listener para o formulário de cadastro Admin
+    mensagemAdmin.className = 'invalido';
+    mensagemAdmin.innerHTML = "Salvando... Aguarde.";
+    
+    try {
+        const formData = new URLSearchParams();
+        formData.append('action', 'salvar');
+        formData.append('cpf', cpfInput);
+        formData.append('resultado', resultadoInput);
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro de Rede: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'cadastrado') {
+            mensagemAdmin.className = 'positivo';
+            mensagemAdmin.innerHTML = 'Resultado cadastrado com sucesso!';
+        } else if (data.status === 'atualizado') {
+            mensagemAdmin.className = 'positivo';
+            mensagemAdmin.innerHTML = 'Resultado atualizado com sucesso!';
+        } else {
+            mensagemAdmin.className = 'invalido';
+            mensagemAdmin.innerHTML = 'Erro ao salvar. Status desconhecido.';
+        }
+
+    } catch (error) {
+        mensagemAdmin.className = 'negativo';
+        mensagemAdmin.innerHTML = `Falha ao salvar. Erro: ${error.message}`;
+    }
+}
+
+// ======================================================================
+// 5. INICIALIZAÇÃO E EVENT LISTENERS
+// ======================================================================
+
+window.onload = function() {
+    // Listener para o formulário de cadastro Admin (Usa 'submit')
     const formAdmin = document.getElementById('formAdmin');
     if (formAdmin) {
         formAdmin.addEventListener('submit', function(e) {
@@ -169,11 +198,23 @@ window.onload = function() {
         });
     }
 
-    // Listener para o botão de consulta rápida dentro do Admin
+    // Listener para o botão de consulta rápida dentro do Admin (Usa 'click' e a função de consulta)
     const btnConsultaAdmin = document.getElementById('btnConsultaAdmin');
     if (btnConsultaAdmin) {
         btnConsultaAdmin.addEventListener('click', function() {
-            consultarResultado('formAdmin'); // Reutiliza a função de consulta, mas com ID Admin
+            consultarResultado('formAdmin'); 
         });
     }
+
+    // NOTA: O formulário público usa 'onclick="consultarResultado(...)"" diretamente no HTML.
+    // Se o seu index.html ainda usa <form> e type="submit", adicione o listener aqui:
+    /*
+    const formPublica = document.getElementById('formConsultaPublica');
+    if (formPublica) {
+        formPublica.addEventListener('submit', function(e) {
+            e.preventDefault();
+            consultarResultado('formConsultaPublica');
+        });
+    }
+    */
 }
