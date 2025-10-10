@@ -3,7 +3,7 @@
 // ======================================================================
 
 // ⚠️ ATUALIZE ESTA URL com o link da sua API do Google Apps Script
-const API_URL = 'https://script.google.com/macros/s/AKfycby6vC4P1p3iU_UhIn--rIlPA4rOkHSrsHNX9dBFfRvFg3L-WF0WxVVJJkYnAC5icv0/exec'; 
+const API_URL = 'https://script.google.com/macros/s/AKfycbxNo09Lf8lAoS49paA4FrNdN9JDKHKBR14gQ1hFaMO5KMeBas9Sn1vOcB3d_VtMlrh6/exec'; 
 const SENHA_ADMIN = '@@@UBS2025'; 
 
 // ======================================================================
